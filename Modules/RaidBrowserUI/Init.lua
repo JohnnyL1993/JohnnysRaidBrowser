@@ -16,6 +16,27 @@ local COLUMN_ORDER = { "name", "gs", "raid", "tank", "healer", "dps" }
 local COLUMN_WIDTHS = { name = 130, gs = 50, raid = 130, tank = 50, healer = 50, dps = 50 }
 local COLUMN_LABELS = { name = "Name", gs = "GS", raid = "Raid", tank = "Tank", healer = "Healer", dps = "DPS" }
 
+-- Lockout side panel: one row per WotLK raid and size. Instance names must
+-- match RaidBrowser's raid_list (core.lua) exactly, since lock status comes
+-- from the same raid_browser.stats.raid_lock_info lookup the list uses.
+local LOCKOUT_PANEL_WIDTH = 170
+local LOCKOUT_RAIDS = {}
+for _, raid in ipairs({
+	{ "ICC", "Icecrown Citadel" },
+	{ "ToC", "Trial of the Crusader" },
+	{ "RS", "The Ruby Sanctum" },
+	{ "VoA", "Vault of Archavon" },
+	{ "Ulduar", "Ulduar" },
+	{ "Naxx", "Naxxramas" },
+	{ "OS", "The Obsidian Sanctum" },
+	{ "EoE", "The Eye of Eternity" },
+	{ "Onyxia", "Onyxia's Lair" },
+}) do
+	for _, size in ipairs({ 10, 25 }) do
+		table.insert(LOCKOUT_RAIDS, { label = raid[1] .. " " .. size, instance = raid[2], size = size })
+	end
+end
+
 -- The scrollframe's own width must equal its content/row width exactly (that's
 -- how the working scrollframes elsewhere in this addon are set up) - the
 -- scrollbar renders in the margin AFTER this width, not inside it. Sizing rows
@@ -62,6 +83,9 @@ local rows = {}
 local raidsetButtons = {}
 local roleFilterButtons = {}
 local hideSavedBtn
+local lockoutRows = {}
+local lockoutCharButton, lockoutMenu
+local selectedLockoutChar
 local selectedSender
 local sortColumn, sortAscending = nil, false
 local refreshTicker
@@ -264,8 +288,149 @@ local function CreateRow(parent)
 	return row
 end
 
+local function FormatReset(seconds)
+	if not seconds or seconds <= 0 then return "Saved" end
+	local days = math.floor(seconds / 86400)
+	local hours = math.floor((seconds % 86400) / 3600)
+	if days > 0 then
+		return string.format("%dd %dh", days, hours)
+	end
+	local minutes = math.floor((seconds % 3600) / 60)
+	return string.format("%dh %dm", hours, minutes)
+end
+
+-- Per-character lockout snapshots, kept in the JohnnysRaidBrowserDB
+-- SavedVariable so alts' lockouts can be viewed from any character. Each
+-- character's entry is rewritten from GetSavedInstanceInfo whenever the server
+-- sends fresh instance info, and stores absolute reset timestamps, so an alt's
+-- lockout turns back to "available" on its own once its reset time passes.
+-- Same name/size matching as raid_browser.stats.raid_lock_info.
+local function LockoutKey(instanceName, size)
+	return string.lower(instanceName) .. ":" .. tostring(size)
+end
+
+local function CharacterKey()
+	return UnitName("player") .. " - " .. GetRealmName()
+end
+
+local function GetLockoutDB()
+	JohnnysRaidBrowserDB = JohnnysRaidBrowserDB or {}
+	JohnnysRaidBrowserDB.lockouts = JohnnysRaidBrowserDB.lockouts or {}
+	return JohnnysRaidBrowserDB.lockouts
+end
+
+local function RecordLockouts()
+	local raids = {}
+	local now = time()
+	for i = 1, GetNumSavedInstances() do
+		local name, _, reset, _, locked, _, _, _, size = GetSavedInstanceInfo(i)
+		if name and locked and reset and reset > 0 then
+			raids[LockoutKey(name, size)] = now + reset
+		end
+	end
+
+	local _, class = UnitClass("player")
+	GetLockoutDB()[CharacterKey()] = {
+		name = UnitName("player"),
+		realm = GetRealmName(),
+		class = class,
+		raids = raids,
+	}
+end
+
+local function CharacterLabel(key)
+	local char = GetLockoutDB()[key]
+	if not char then return key end
+	local label = char.realm == GetRealmName() and char.name or key
+	local color = RAID_CLASS_COLORS[char.class]
+	if color then
+		return string.format("|cff%02x%02x%02x%s|r", color.r * 255, color.g * 255, color.b * 255, label)
+	end
+	return label
+end
+
+local function RefreshLockouts()
+	if not lockoutCharButton then return end
+
+	local db = GetLockoutDB()
+	if not selectedLockoutChar or not db[selectedLockoutChar] then
+		selectedLockoutChar = CharacterKey()
+	end
+	lockoutCharButton.text:SetText(CharacterLabel(selectedLockoutChar) .. "  v")
+
+	local char = db[selectedLockoutChar]
+	local raids = char and char.raids or {}
+	local now = time()
+	for _, row in ipairs(lockoutRows) do
+		local resetAt = raids[LockoutKey(row.raid.instance, row.raid.size)]
+		if resetAt and resetAt > now then
+			row.label:SetTextColor(1, 0.3, 0.3)
+			row.status:SetTextColor(1, 0.3, 0.3)
+			row.status:SetText(FormatReset(resetAt - now))
+		else
+			row.label:SetTextColor(0.3, 1, 0.3)
+			row.status:SetTextColor(0.3, 1, 0.3)
+			row.status:SetText("Available")
+		end
+	end
+end
+
+-- Records lockouts on every login/zone change, whether or not the window is
+-- open, so each alt's snapshot is current as of the last time it was played.
+local lockoutRecorder = CreateFrame("Frame")
+lockoutRecorder:RegisterEvent("PLAYER_ENTERING_WORLD")
+lockoutRecorder:RegisterEvent("UPDATE_INSTANCE_INFO")
+lockoutRecorder:SetScript("OnEvent", function(self, event)
+	if event == "PLAYER_ENTERING_WORLD" then
+		RequestRaidInfo()
+		return
+	end
+	RecordLockouts()
+	if mainFrame and mainFrame:IsShown() then
+		RefreshLockouts()
+	end
+end)
+
+local function ToggleLockoutMenu()
+	if lockoutMenu:IsShown() then
+		lockoutMenu:Hide()
+		return
+	end
+
+	local keys = {}
+	for key in pairs(GetLockoutDB()) do
+		table.insert(keys, key)
+	end
+	table.sort(keys)
+
+	lockoutMenu.buttons = lockoutMenu.buttons or {}
+	for i, key in ipairs(keys) do
+		local btn = lockoutMenu.buttons[i]
+		if not btn then
+			btn = Skin:CreateButton(lockoutMenu, lockoutCharButton:GetWidth() - 4, 20)
+			btn:SetPoint("TOPLEFT", 2, -2 - (i - 1) * 20)
+			lockoutMenu.buttons[i] = btn
+		end
+		btn.text:SetText(CharacterLabel(key))
+		btn:SetScript("OnClick", function()
+			selectedLockoutChar = key
+			lockoutMenu:Hide()
+			RefreshLockouts()
+		end)
+		btn:Show()
+	end
+	for i = #keys + 1, #lockoutMenu.buttons do
+		lockoutMenu.buttons[i]:Hide()
+	end
+
+	lockoutMenu:SetHeight(#keys * 20 + 4)
+	lockoutMenu:Show()
+end
+
 local function RefreshList()
 	if not raid_browser then return end
+
+	RefreshLockouts()
 
 	local messages = {}
 	for _, info in ipairs(GetSortedMessages()) do
@@ -372,7 +537,8 @@ end
 local function BuildFrame()
 	mainFrame = CreateFrame("Frame", "JohnnysRaidBrowserFrame", UIParent)
 	mainFrame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
-	mainFrame:SetPoint("RIGHT", UIParent, "RIGHT", -20, 0)
+	-- Leave room on the right for the docked lockout panel.
+	mainFrame:SetPoint("RIGHT", UIParent, "RIGHT", -(20 + LOCKOUT_PANEL_WIDTH + 4), 0)
 	mainFrame:SetFrameStrata("DIALOG")
 	mainFrame:SetMovable(true)
 	mainFrame:EnableMouse(true)
@@ -389,6 +555,8 @@ local function BuildFrame()
 	local close = Skin:CreateButton(mainFrame, 20, 20, "X")
 	close:SetPoint("TOPRIGHT", -4, -4)
 	close:SetScript("OnClick", function() RaidBrowserUI:Toggle() end)
+
+	JohnnysRaidBrowser.VersionCheck:AttachNotice(mainFrame)
 
 	-- Left panel: sortable column headers + scrollable raid list.
 	local headerX = 16
@@ -507,6 +675,50 @@ local function BuildFrame()
 	statusText:SetTextColor(0.7, 0.7, 0.7)
 	statusText:SetText("0 raid(s) found")
 
+	-- Lockout side panel, docked to the window's right edge. As a child of
+	-- mainFrame it drags, shows and hides along with it.
+	local lockoutPanel = CreateFrame("Frame", nil, mainFrame)
+	lockoutPanel:SetSize(LOCKOUT_PANEL_WIDTH, FRAME_HEIGHT)
+	lockoutPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 4, 0)
+	Skin:StylePanel(lockoutPanel, 0.95)
+
+	local lockoutTitle = lockoutPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	lockoutTitle:SetPoint("TOP", 0, -18)
+	lockoutTitle:SetText("Raid Lockouts")
+
+	-- Character picker: a flat button that opens a list of every character
+	-- with a recorded lockout snapshot (this one plus any alts logged in
+	-- since this feature was added).
+	lockoutCharButton = Skin:CreateButton(lockoutPanel, LOCKOUT_PANEL_WIDTH - 28, 20)
+	lockoutCharButton:SetPoint("TOP", 0, -40)
+	lockoutCharButton:SetScript("OnClick", ToggleLockoutMenu)
+
+	lockoutMenu = CreateFrame("Frame", nil, lockoutPanel)
+	lockoutMenu:SetWidth(LOCKOUT_PANEL_WIDTH - 28)
+	lockoutMenu:SetPoint("TOP", lockoutCharButton, "BOTTOM", 0, -2)
+	lockoutMenu:SetFrameLevel(lockoutPanel:GetFrameLevel() + 10)
+	Skin:StylePanel(lockoutMenu, 1)
+	lockoutMenu:Hide()
+
+	for i, raid in ipairs(LOCKOUT_RAIDS) do
+		local y = -74 - (i - 1) * 22
+		local label = lockoutPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		label:SetPoint("TOPLEFT", 14, y)
+		label:SetJustifyH("LEFT")
+		label:SetText(raid.label)
+
+		local status = lockoutPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		status:SetPoint("TOPRIGHT", -14, y)
+		status:SetJustifyH("RIGHT")
+
+		table.insert(lockoutRows, { raid = raid, label = label, status = status })
+	end
+
+	local lockoutHint = lockoutPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	lockoutHint:SetPoint("BOTTOM", 0, 22)
+	lockoutHint:SetTextColor(0.6, 0.6, 0.6)
+	lockoutHint:SetText("Red = saved, Green = available")
+
 	-- Raid messages arrive over time via chat, independent of whether this
 	-- window is open, so poll for changes while it's shown instead of hooking
 	-- into RaidBrowser's own internals.
@@ -522,11 +734,14 @@ local function BuildFrame()
 	end)
 
 	mainFrame:SetScript("OnShow", function()
+		RequestRaidInfo()
+		selectedLockoutChar = nil
 		RefreshRaidsetButtons()
 		RefreshList()
 		refreshTicker:Show()
 	end)
 	mainFrame:SetScript("OnHide", function()
+		lockoutMenu:Hide()
 		refreshTicker:Hide()
 	end)
 end

@@ -2,8 +2,9 @@
 ## Title: Johnny's Raid Browser
 ## Notes: Custom window listing raids advertised via the RaidBrowser addon's LFM message feed, with role/GS filters and one-click whisper/join.
 ## Author: Johnny
-## Version: 1.0
+## Version: 1.1
 ## OptionalDeps: RaidBrowser
+## SavedVariables: JohnnysRaidBrowserDB
 
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
@@ -12,5 +13,6 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 
 Core.lua
 Modules\Skin.lua
+Modules\VersionCheck.lua
 
 Modules\RaidBrowserUI\Init.lua
