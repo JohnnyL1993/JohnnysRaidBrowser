@@ -2,7 +2,7 @@
 ## Title: Johnny's Raid Browser
 ## Notes: Custom window listing raids advertised via the RaidBrowser addon's LFM message feed, with role/GS filters and one-click whisper/join.
 ## Author: Johnny
-## Version: 1.1
+## Version: 1.2
 ## OptionalDeps: RaidBrowser
 ## SavedVariables: JohnnysRaidBrowserDB
 
