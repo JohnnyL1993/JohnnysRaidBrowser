@@ -7,6 +7,10 @@ Custom window listing raids advertised via the RaidBrowser addon's LFM message f
 - **Raid lockouts panel** docked to the window: every WotLK raid at 10 and 25, green when available, red with time-to-reset when saved. A character picker shows your alts' lockouts too (each alt appears after you've logged into it once). No SavedInstances needed.
 - **In-game update notice**: an "Update available" line appears in the window when someone running a newer version is seen, with a copyable link to the releases page.
 
+## Screenshots
+
+![Raid Browser](screenshots/raidbrowser.png)
+
 ## Requirements
 
 **Requires the [RaidBrowser](https://github.com/fjaros/RaidBrowser) addon**, which supplies the LFM feed this window displays. Open it from Johnny's Addon Hub or Johnny's Raid Comp's launcher.
