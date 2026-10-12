@@ -24,10 +24,6 @@ Open it from Johnny's Addon Hub or Johnny's Raid Comp's launcher.
 
 Download the latest release zip, delete the old `JohnnysRaidBrowser` folder, and extract the new one in its place.
 
-## Credits
-
-The chat parsing comes from [Raid Browser](https://github.com/fjaros/RaidBrowser) by Act/Horsebreed@Warmane, which is bundled inside this addon (see `RaidBrowser/NOTICE.txt`).
-
 ## Other Johnny's addons
 
 - [Johnny's Raid Comp](https://github.com/JohnnyL1993/JohnnysRaidComp)
