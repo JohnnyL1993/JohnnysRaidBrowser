@@ -909,6 +909,8 @@ local function BuildFrame()
 	mainFrame:SetScript("OnDragStop", mainFrame.StopMovingOrSizing)
 	Skin:StylePanel(mainFrame, 0.95)
 	mainFrame:Hide()
+	-- Esc closes the window, like Blizzard's own panels.
+	table.insert(UISpecialFrames, "JohnnysRaidBrowserFrame")
 
 	local title = Skin:AddHeader(mainFrame, "Raid Browser")
 	countText = Skin:Heading(mainFrame, 12, C.muted)

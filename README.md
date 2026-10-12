@@ -18,7 +18,7 @@ Lists raids advertised in chat, with role/GS filters and one-click whisper/join.
 2. Extract it into `World of Warcraft\Interface\AddOns\`. You should end up with `Interface\AddOns\JohnnysRaidBrowser\JohnnysRaidBrowser.toc`.
 3. Restart WoW, or log out to the character screen, and make sure the addon is enabled.
 
-Open it from Johnny's Addon Hub or Johnny's Raid Comp's launcher.
+Open it with the minimap button, by typing `/jrb`, or from Johnny's Addon Hub if you use it (the minimap button hides itself while the hub is installed). `/jrb minimap` shows or hides the minimap button.
 
 ## Updating
 

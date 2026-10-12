@@ -2,7 +2,7 @@
 ## Title: Johnny's Raid Browser
 ## Notes: Lists raids advertised in chat (via the bundled Raid Browser parser by Act/Horsebreed), with role/GS filters and one-click whisper/join.
 ## Author: Johnny
-## Version: 1.3
+## Version: 1.4
 ## OptionalDeps: RaidBrowser, GearScoreLite
 ## SavedVariablesPerCharacter: raid_browser_character_raidsets, raid_browser_character_current_raidset
 ## SavedVariables: JohnnysRaidBrowserDB
@@ -26,5 +26,6 @@ Modules\Skin.lua
 Modules\VersionCheck.lua
 Modules\WindowSettings.lua
 Modules\Changelog.lua
+Modules\Launcher.lua
 
 Modules\RaidBrowserUI\Init.lua

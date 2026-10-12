@@ -14,6 +14,13 @@ local Skin = NS.Skin
 
 local ENTRIES = {
 	{
+		version = "1.4",
+		changes = {
+			"Works without Johnny's Addon Hub: a minimap button opens the raid browser (left-click) or its settings (right-click). Drag it round the minimap to move it.",
+			"Slash command: /jrb (or /raidbrowser) opens the window; /jrb minimap shows or hides the minimap button. It can also be turned off in the Cfg panel.",
+		},
+	},
+	{
 		version = "1.3",
 		changes = {
 			"Works on its own now: the raid chat parser is built in, so you no longer need to install RaidBrowser separately. If you already have it installed, your copy is used instead.",
