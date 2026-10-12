@@ -358,9 +358,16 @@ local function PaintToggle(btn, on)
 	end
 end
 
+-- OnMouseUp fires before OnClick, so painting there alone shows the state
+-- from before the click (lit when off, unlit when on). The OnClick hook runs
+-- after the button's own OnClick has flipped the setting and paints the new
+-- one; OnMouseUp is kept so StyleButton's idle repaint doesn't wipe the look.
+-- Call this after the button's SetScript("OnClick") - a later SetScript
+-- would replace the hook.
 local function MakeToggle(btn, isOn)
 	btn.isOn = isOn
 	btn:SetScript("OnMouseUp", function(self) PaintToggle(self, self.isOn()) end)
+	btn:HookScript("OnClick", function(self) PaintToggle(self, self.isOn()) end)
 	PaintToggle(btn, isOn())
 end
 
