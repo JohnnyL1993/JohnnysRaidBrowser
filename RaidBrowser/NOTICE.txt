@@ -2,9 +2,6 @@ This folder bundles Raid Browser v1.3.0 by Act/Horsebreed@Warmane
 (https://github.com/fjaros/RaidBrowser) so Johnny's Raid Browser works without
 installing it separately.
 
-Raid Browser has no licence file. It is included here with the
-author's permission, given to Johnny directly.
-
 The files are the original ones with a single change: a two-line guard at the
 top of each so they don't load when the standalone RaidBrowser addon is also
 installed. _guard.lua is new. All credit for the chat parsing, raid sets and

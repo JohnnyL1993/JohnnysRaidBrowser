@@ -11,12 +11,6 @@ Lists raids advertised in chat, with role/GS filters and one-click whisper/join.
 
 ![Raid Browser](screenshots/raidbrowser.png)
 
-## Requirements
-
-Nothing else to install. The chat parsing comes from [Raid Browser](https://github.com/fjaros/RaidBrowser) by Act/Horsebreed@Warmane, which is bundled inside this addon with the author's permission (see `RaidBrowser/NOTICE.txt`). If you already have the standalone RaidBrowser addon installed, that copy is used instead and the bundled one stays out of the way.
-
-Open it from Johnny's Addon Hub or Johnny's Raid Comp's launcher.
-
 ## Install
 
 1. Go to [Releases](https://github.com/JohnnyL1993/JohnnysRaidBrowser/releases) and download **`JohnnysRaidBrowser-vX.Y.zip`** from the latest release.
@@ -24,9 +18,15 @@ Open it from Johnny's Addon Hub or Johnny's Raid Comp's launcher.
 2. Extract it into `World of Warcraft\Interface\AddOns\`. You should end up with `Interface\AddOns\JohnnysRaidBrowser\JohnnysRaidBrowser.toc`.
 3. Restart WoW, or log out to the character screen, and make sure the addon is enabled.
 
+Open it from Johnny's Addon Hub or Johnny's Raid Comp's launcher.
+
 ## Updating
 
 Download the latest release zip, delete the old `JohnnysRaidBrowser` folder, and extract the new one in its place.
+
+## Credits
+
+The chat parsing comes from [Raid Browser](https://github.com/fjaros/RaidBrowser) by Act/Horsebreed@Warmane, which is bundled inside this addon (see `RaidBrowser/NOTICE.txt`).
 
 ## Other Johnny's addons
 
