@@ -2,7 +2,7 @@
 
 A World of Warcraft 3.3.5a addon for the Warmane private server.
 
-Custom window listing raids advertised via the RaidBrowser addon's LFM message feed, with role/GS filters and one-click whisper/join.
+Lists raids advertised in chat, with role/GS filters and one-click whisper/join. Everything it needs is included, so there's nothing else to install.
 
 - **Raid lockouts panel** docked to the window: every WotLK raid at 10 and 25, green when available, red with time-to-reset when saved. A character picker shows your alts' lockouts too (each alt appears after you've logged into it once). No SavedInstances needed.
 - **In-game update notice**: an "Update available" line appears in the window when someone running a newer version is seen, with a copyable link to the releases page.
@@ -13,7 +13,9 @@ Custom window listing raids advertised via the RaidBrowser addon's LFM message f
 
 ## Requirements
 
-**Requires the [RaidBrowser](https://github.com/fjaros/RaidBrowser) addon**, which supplies the LFM feed this window displays. Open it from Johnny's Addon Hub or Johnny's Raid Comp's launcher.
+Nothing else to install. The chat parsing comes from [Raid Browser](https://github.com/fjaros/RaidBrowser) by Act/Horsebreed@Warmane, which is bundled inside this addon with the author's permission (see `RaidBrowser/NOTICE.txt`). If you already have the standalone RaidBrowser addon installed, that copy is used instead and the bundled one stays out of the way.
+
+Open it from Johnny's Addon Hub or Johnny's Raid Comp's launcher.
 
 ## Install
 

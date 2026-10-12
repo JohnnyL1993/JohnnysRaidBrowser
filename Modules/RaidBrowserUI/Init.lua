@@ -913,9 +913,13 @@ local function BuildFrame()
 
 	-- The update notice anchors itself to its host's top-left corner, which
 	-- the title occupies, so give it a host left of the close button.
+	-- Cfg: scale/opacity, changelog and bug reports (Modules\WindowSettings.lua).
+	local cfgBtn = JohnnysRaidBrowser.WindowSettings:AttachButton(mainFrame)
+	JohnnysRaidBrowser.WindowSettings:Register(mainFrame, "raidbrowser", "Raid Browser")
+
 	local noticeHost = CreateFrame("Frame", nil, mainFrame)
 	noticeHost:SetSize(220, Skin.HEADER_HEIGHT)
-	noticeHost:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -30, 2)
+	noticeHost:SetPoint("TOPRIGHT", cfgBtn, "TOPLEFT", -4, 6)
 	JohnnysRaidBrowser.VersionCheck:AttachNotice(noticeHost)
 
 	-- Left: column headers + scrollable raid list.
@@ -1070,7 +1074,7 @@ local function BuildFrame()
 
 	-- Lockout side panel, docked to the window's right edge. As a child of
 	-- mainFrame it drags, shows and hides along with it.
-	local lockoutPanel = CreateFrame("Frame", nil, mainFrame)
+	local lockoutPanel = CreateFrame("Frame", "JohnnysRaidBrowserLockouts", mainFrame)
 	lockoutPanel:SetSize(LOCKOUT_PANEL_WIDTH, FRAME_HEIGHT)
 	lockoutPanel:SetPoint("TOPLEFT", mainFrame, "TOPRIGHT", 4, 0)
 	Skin:StylePanel(lockoutPanel, 0.95)
@@ -1165,16 +1169,23 @@ local function BuildFrame()
 		RefreshList()
 		RefreshDetail()
 		refreshTicker:Show()
+		-- First open after an update: show what changed beside the window.
+		if JohnnysRaidBrowser.Changelog then
+			pcall(JohnnysRaidBrowser.Changelog.ShowIfUnseen, JohnnysRaidBrowser.Changelog)
+		end
 	end)
 	mainFrame:SetScript("OnHide", function()
 		lockoutMenu:Hide()
 		refreshTicker:Hide()
+		if JohnnysRaidBrowser.Changelog then
+			JohnnysRaidBrowser.Changelog:Hide()
+		end
 	end)
 end
 
 function RaidBrowserUI:Toggle()
 	if not raid_browser or not raid_browser.stats then
-		JohnnysRaidBrowser:Print("RaidBrowser addon not found - can't open the raid browser.")
+		JohnnysRaidBrowser:Print("The raid chat parser didn't load - can't open the raid browser. Check for a Lua error at login.")
 		return
 	end
 
